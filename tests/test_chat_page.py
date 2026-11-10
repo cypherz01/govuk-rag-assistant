@@ -17,6 +17,13 @@ def test_home_page_is_the_chat_page(client: TestClient) -> None:
     assert 'href="/static/styles.css"' in html
 
 
+def test_page_answers_head_requests_for_uptime_checks(client: TestClient) -> None:
+    response = client.head("/")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+
+
 def test_page_needs_no_key_so_visitors_can_enter_one(settings: Settings) -> None:
     with TestClient(create_app(settings)) as anonymous:
         assert anonymous.get("/").status_code == 200
