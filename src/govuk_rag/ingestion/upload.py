@@ -42,20 +42,25 @@ class AzureWritableBlobContainer:
 
 
 def upload_directory(directory: Path, container: WritableBlobContainer) -> int:
-    """Upload every ``*.json`` document in ``directory``; return how many were uploaded."""
+    """Upload every ``*.json`` document under ``directory``; return how many were uploaded.
+
+    The blob name is the path relative to ``directory`` (``guide/part.json`` for each part of a
+    multi-page guide), so the document id read back by the blob connector matches the fetcher's.
+    """
     if not directory.is_dir():
         msg = f"{directory} does not exist: run govuk-rag-fetch first"
         raise FileNotFoundError(msg)
 
     documents: list[tuple[str, str]] = []
-    for path in sorted(directory.glob("*.json")):
+    for path in sorted(directory.rglob("*.json")):
+        name = path.relative_to(directory).as_posix()
         text = path.read_text(encoding="utf-8")
         try:
             StoredDocument.model_validate_json(text)
         except ValidationError as error:
-            msg = f"{path.name} is not a valid document: {error}"
+            msg = f"{name} is not a valid document: {error}"
             raise ValueError(msg) from error
-        documents.append((path.name, text))
+        documents.append((name, text))
 
     for name, text in documents:
         container.upload_text(name, text)
