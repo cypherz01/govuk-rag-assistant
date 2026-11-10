@@ -64,3 +64,24 @@ def test_rejects_overlap_not_smaller_than_chunk_size() -> None:
 def test_rejects_non_positive_sizes(field: str) -> None:
     with pytest.raises(ValidationError):
         Settings.model_validate({field: 0})
+
+
+def test_answering_defaults() -> None:
+    settings = Settings()
+
+    assert settings.chat_deployment == "gpt-4o-mini"
+    assert settings.retrieval_top_k == 5
+    assert settings.relevance_threshold == 0.35
+    assert settings.max_output_tokens == 500
+
+
+@pytest.mark.parametrize("threshold", [-1.1, 1.1])
+def test_rejects_relevance_threshold_outside_cosine_range(threshold: float) -> None:
+    with pytest.raises(ValidationError):
+        Settings(relevance_threshold=threshold)
+
+
+@pytest.mark.parametrize("field", ["retrieval_top_k", "max_output_tokens"])
+def test_rejects_non_positive_answering_sizes(field: str) -> None:
+    with pytest.raises(ValidationError):
+        Settings.model_validate({field: 0})
