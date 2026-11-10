@@ -26,3 +26,6 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Fetched GOV.UK documents (regenerate with `uv run govuk-rag-fetch`)
+data/govuk/

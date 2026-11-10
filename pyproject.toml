@@ -6,11 +6,20 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
+    "azure-identity>=1.27.0",
+    "azure-search-documents>=12.0.0",
+    "azure-storage-blob>=12.31.1",
     "fastapi>=0.162.4",
+    "httpx>=0.28.1",
+    "openai>=3.49.0",
     "pydantic>=2.14.3",
     "pydantic-settings>=2.16.2",
     "uvicorn[standard]>=0.54.0",
 ]
+
+[project.scripts]
+govuk-rag-fetch = "govuk_rag.govuk.fetch:main"
+govuk-rag-ingest = "govuk_rag.ingestion.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -51,7 +60,6 @@ filterwarnings = [
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "pyright>=1.1.414",
     "pytest>=9.2.0",
     "ruff>=0.17.4",

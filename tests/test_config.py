@@ -41,3 +41,26 @@ def test_settings_are_immutable() -> None:
 
     with pytest.raises(ValidationError):
         settings.environment = "prod"
+
+
+def test_ingestion_defaults() -> None:
+    settings = Settings()
+
+    assert settings.azure_storage_account_url is None
+    assert settings.blob_container_name == "govuk-guidance"
+    assert settings.search_index_name == "govuk-guidance"
+    assert settings.embedding_deployment == "text-embedding-3-small"
+    assert settings.embedding_dimensions == 1536
+    assert settings.chunk_max_chars == 1500
+    assert settings.chunk_overlap_chars == 200
+
+
+def test_rejects_overlap_not_smaller_than_chunk_size() -> None:
+    with pytest.raises(ValidationError, match="chunk_overlap_chars"):
+        Settings(chunk_max_chars=500, chunk_overlap_chars=500)
+
+
+@pytest.mark.parametrize("field", ["embedding_dimensions", "chunk_max_chars"])
+def test_rejects_non_positive_sizes(field: str) -> None:
+    with pytest.raises(ValidationError):
+        Settings.model_validate({field: 0})
