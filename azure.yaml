@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+# `azd up` provisions infra/ (Bicep), builds the image in Azure Container Registry (no local
+# Docker needed), deploys it to Container Apps, then loads the GOV.UK guidance into the index.
+name: govuk-rag-assistant
+metadata:
+  template: govuk-rag-assistant
+
+services:
+  api:
+    project: .
+    language: python
+    host: containerapp
+    docker:
+      path: Dockerfile
+      remoteBuild: true
+
+hooks:
+  # Runs after every provision. Safe to repeat: unchanged documents are skipped.
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/load-guidance.ps1
+      interactive: true
+      continueOnError: false
+    posix:
+      shell: sh
+      run: ./scripts/load-guidance.sh
+      interactive: true
+      continueOnError: false
