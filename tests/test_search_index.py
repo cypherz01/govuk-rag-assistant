@@ -24,6 +24,15 @@ def test_index_definition_supports_hybrid_search() -> None:
     ]
 
 
+def test_vectors_are_retrievable_so_retrieval_can_score_relevance() -> None:
+    # AzureSearchRetriever selects content_vector to compute cosine relevance; Azure rejects
+    # selecting a field that is not explicitly retrievable.
+    index = build_index_definition("govuk-guidance", embedding_dimensions=1536)
+    vector = next(f for f in index.fields if f.name == "content_vector")
+
+    assert vector.retrievable is True
+
+
 class FakeSearchClient:
     def __init__(self, results: list[dict[str, Any]]) -> None:
         self.results = results
@@ -77,6 +86,19 @@ def test_document_hashes_reads_first_chunk_of_each_document() -> None:
 
     assert chunk_index.document_hashes() == {"a": "h1", "b": "h2"}
     assert search.search_calls[0]["filter"] == "chunk_index eq 0"
+
+
+def test_document_hashes_pages_in_a_stable_order() -> None:
+    # A "*" search scores every row equally, so without a sort Azure's pages can repeat some
+    # documents and skip others; skipped documents would then be re-embedded as "added".
+    search = FakeSearchClient([])
+    chunk_index, _ = make_index(search)
+
+    chunk_index.document_hashes()
+
+    assert search.search_calls[0]["order_by"] == ["document_id"]
+    definition = build_index_definition("idx", embedding_dimensions=3)
+    assert next(f for f in definition.fields if f.name == "document_id").sortable
 
 
 def test_upsert_maps_chunks_to_search_documents() -> None:
