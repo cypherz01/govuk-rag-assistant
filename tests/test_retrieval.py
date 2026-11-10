@@ -2,7 +2,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 import pytest
-from azure.search.documents.models import VectorizedQuery
+from azure.search.documents.models import VectorizedQuery, VectorQuery
 
 from govuk_rag.answering.retrieval import AzureSearchRetriever, cosine_similarity
 
@@ -26,7 +26,7 @@ class FakeHybridSearchClient:
         self,
         search_text: str,
         *,
-        vector_queries: list[VectorizedQuery],
+        vector_queries: list[VectorQuery],
         select: list[str],
         top: int,
     ) -> Iterator[Mapping[str, Any]]:
@@ -62,6 +62,7 @@ def test_runs_one_hybrid_query_with_the_question_text_and_its_embedding() -> Non
     assert call["search_text"] == "How much holiday do I get?"
     assert call["top"] == 4
     [vector_query] = call["vector_queries"]
+    assert isinstance(vector_query, VectorizedQuery)
     assert vector_query.vector == [1.0, 0.0]
     assert vector_query.fields == "content_vector"
     assert vector_query.k_nearest_neighbors == 4

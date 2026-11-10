@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     chunk_max_chars: int = Field(default=1500, gt=0)
     chunk_overlap_chars: int = Field(default=200, ge=0)
 
+    # Answering
+    chat_deployment: str = "gpt-4o-mini"
+    retrieval_top_k: int = Field(default=5, gt=0)
+    # Minimum cosine similarity between question and chunk for the chunk to count as relevant.
+    # Provisional until hand-tuned against the live index (see the relevance-threshold ADR).
+    relevance_threshold: float = Field(default=0.35, ge=-1.0, le=1.0)
+    max_output_tokens: int = Field(default=500, gt=0)
+
     @model_validator(mode="after")
     def _overlap_smaller_than_chunk(self) -> Self:
         if self.chunk_overlap_chars >= self.chunk_max_chars:

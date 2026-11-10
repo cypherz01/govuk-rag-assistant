@@ -4,7 +4,7 @@ An Azure-native assistant that answers staff questions about UK employee-rights 
 sick pay, flexible working). Every answer cites its GOV.UK sources, and it says "I don't know" when
 the documents don't cover a question.
 
-> Work in progress: currently at **Milestone 2 (Ingestion)**.
+> Work in progress: currently at **Milestone 3 (Answering)**.
 
 ## Local development
 
@@ -66,6 +66,26 @@ needs these roles:
 - **Cognitive Services OpenAI User** on the OpenAI resource.
 
 Other data sources plug in by implementing `SourceConnector` (`src/govuk_rag/ingestion/connectors.py`).
+
+## Answering
+
+`POST /chat` takes `{"question": "..."}` and returns an answer with citations, or a fixed
+"I don't know" reply:
+
+1. **Retrieve.** One hybrid (keyword + vector) query to Azure AI Search returns the top
+   `RAG_RETRIEVAL_TOP_K` chunks. Each chunk is scored by the cosine similarity between the question
+   and the chunk. Hybrid search's own score only reflects rank, so a threshold can't use it.
+2. **Gate.** Chunks below `RAG_RELEVANCE_THRESHOLD` are dropped. If none are left, the service
+   answers "I don't know" without calling the model.
+3. **Answer.** The model (`RAG_CHAT_DEPLOYMENT`, capped at `RAG_MAX_OUTPUT_TOKENS`) is told to
+   answer only from the numbered sources, to cite them as `[1]`, and to reply `NO_ANSWER` when they
+   don't answer the question. `NO_ANSWER` becomes the same "I don't know" reply.
+4. **Cite.** Citations list the sources the answer cites, renumbered in order of use, each with
+   its page title, GOV.UK link and a snippet.
+
+`/chat` needs `RAG_AZURE_SEARCH_ENDPOINT` and `RAG_AZURE_OPENAI_ENDPOINT`. Without them it returns
+HTTP 503. Your identity needs **Search Index Data Reader** on the search service and
+**Cognitive Services OpenAI User** on the OpenAI resource.
 
 GOV.UK content is © Crown copyright, used under the
 [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
