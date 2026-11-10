@@ -4,7 +4,7 @@ An Azure-native assistant that answers staff questions about UK employee-rights 
 sick pay, flexible working). Every answer cites its GOV.UK sources, and it says "I don't know" when
 the documents don't cover a question.
 
-> Work in progress: currently at **Milestone 3 (Answering)**.
+> Work in progress: currently at **Milestone 4 (Chat UI and access)**.
 
 ## Local development
 
@@ -12,7 +12,7 @@ Requires [uv](https://docs.astral.sh/uv/).
 
 ```sh
 uv sync                                   # install dependencies
-uv run uvicorn govuk_rag.main:app --reload   # run the API on http://127.0.0.1:8000
+uv run uvicorn govuk_rag.main:app --reload   # chat page and API on http://127.0.0.1:8000
 ```
 
 ### Checks
@@ -86,6 +86,25 @@ Other data sources plug in by implementing `SourceConnector` (`src/govuk_rag/ing
 `/chat` needs `RAG_AZURE_SEARCH_ENDPOINT` and `RAG_AZURE_OPENAI_ENDPOINT`. Without them it returns
 HTTP 503. Your identity needs **Search Index Data Reader** on the search service and
 **Cognitive Services OpenAI User** on the OpenAI resource.
+
+## Chat page and access
+
+The chat page is served at `/`. It's a single HTML page with its own script and stylesheet, and no
+build step.
+
+`/chat` is protected by a shared demo key, sent in the `X-Demo-Key` header:
+
+- Set it with `RAG_DEMO_KEY`. Locally, put it in `.env`. When deployed, it's a Container Apps
+  secret.
+- Requests with a missing or wrong key get HTTP 401. If no key is configured, `/chat` rejects
+  every request with HTTP 503, so a missing secret never leaves it open.
+- The page asks for the key and keeps it in the browser's local storage. To share a link that
+  fills the key in, use `https://<host>/#key=<demo-key>`. The part after `#` is never sent to
+  the server, so the key stays out of server logs, and the page removes it from the address bar.
+- `/health` and the page itself need no key.
+
+The page loads nothing from other sites and has no inline code, so it is served with a strict
+Content-Security-Policy. Answers are added as plain text, never as HTML.
 
 GOV.UK content is © Crown copyright, used under the
 [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).

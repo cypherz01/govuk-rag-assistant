@@ -4,9 +4,11 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import SecretStr
 
 from govuk_rag.config import Settings
 from govuk_rag.main import create_app
+from tests.auth import DEMO_KEY, DEMO_KEY_HEADERS
 
 
 @pytest.fixture(autouse=True)
@@ -20,10 +22,11 @@ def isolated_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(environment="test")
+    return Settings(environment="test", demo_key=SecretStr(DEMO_KEY))
 
 
 @pytest.fixture
 def client(settings: Settings) -> Iterator[TestClient]:
-    with TestClient(create_app(settings)) as test_client:
+    """A client for the app with no Azure configured, sending the demo key."""
+    with TestClient(create_app(settings), headers=DEMO_KEY_HEADERS) as test_client:
         yield test_client

@@ -7,6 +7,7 @@ from govuk_rag.answering.answerer import I_DONT_KNOW, Answerer
 from govuk_rag.config import Settings
 from govuk_rag.main import create_app
 from tests.answering_fakes import FakeChatModel, FakeRetriever, retrieved_chunk
+from tests.auth import DEMO_KEY_HEADERS
 
 
 @pytest.fixture
@@ -18,7 +19,9 @@ def chat_model() -> FakeChatModel:
 def chat_client(settings: Settings, chat_model: FakeChatModel) -> Iterator[TestClient]:
     retriever = FakeRetriever([retrieved_chunk(relevance=0.8)])
     answerer = Answerer(retriever, chat_model, relevance_threshold=0.4)
-    with TestClient(create_app(settings, answerer=answerer)) as test_client:
+    with TestClient(
+        create_app(settings, answerer=answerer), headers=DEMO_KEY_HEADERS
+    ) as test_client:
         yield test_client
 
 
@@ -47,7 +50,9 @@ def test_chat_returns_i_dont_know_for_off_topic_questions(settings: Settings) ->
         FakeRetriever([retrieved_chunk(relevance=0.1)]), model, relevance_threshold=0.4
     )
 
-    with TestClient(create_app(settings, answerer=answerer)) as test_client:
+    with TestClient(
+        create_app(settings, answerer=answerer), headers=DEMO_KEY_HEADERS
+    ) as test_client:
         response = test_client.post("/chat", json={"question": "Who won the 1966 World Cup?"})
 
     assert response.status_code == 200

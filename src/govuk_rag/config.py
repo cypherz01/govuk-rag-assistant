@@ -2,7 +2,7 @@
 
 from typing import Literal, Self
 
-from pydantic import Field, HttpUrl, model_validator
+from pydantic import Field, HttpUrl, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["local", "test", "dev", "prod"]
@@ -12,8 +12,9 @@ LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 class Settings(BaseSettings):
     """Runtime settings.
 
-    No secrets live here: Azure services are reached with managed identity, so only
-    endpoints and resource names are configured.
+    Azure services are reached with managed identity, so only endpoints and resource names are
+    configured. The one secret, the shared demo key, comes from the environment (a Container
+    Apps secret when deployed) and is never written to code or config files.
     """
 
     model_config = SettingsConfigDict(
@@ -49,6 +50,10 @@ class Settings(BaseSettings):
     # Provisional until hand-tuned against the live index (see the relevance-threshold ADR).
     relevance_threshold: float = Field(default=0.35, ge=-1.0, le=1.0)
     max_output_tokens: int = Field(default=500, gt=0)
+
+    # Access: callers of /chat must send this in the X-Demo-Key header. Unset means /chat is
+    # closed to everyone, so a missing secret can never leave the endpoint open.
+    demo_key: SecretStr | None = None
 
     @model_validator(mode="after")
     def _overlap_smaller_than_chunk(self) -> Self:
