@@ -20,6 +20,7 @@ dependencies = [
 [project.scripts]
 govuk-rag-fetch = "govuk_rag.govuk.fetch:main"
 govuk-rag-ingest = "govuk_rag.ingestion.cli:main"
+govuk-rag-upload = "govuk_rag.ingestion.upload:main"
 
 [build-system]
 requires = ["hatchling"]

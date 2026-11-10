@@ -54,7 +54,7 @@ def test_rejects_an_invalid_document_before_uploading_anything(tmp_path: Path) -
     (tmp_path / "b-broken.json").write_text('{"title": "No url"}', encoding="utf-8")
     container = FakeWritableContainer()
 
-    with pytest.raises(ValueError, match="b-broken.json"):
+    with pytest.raises(ValueError, match=r"b-broken.json"):
         upload_directory(tmp_path, container)
 
     assert container.blobs == {}
