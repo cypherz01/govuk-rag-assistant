@@ -195,7 +195,7 @@ resource embeddingDeployment 'Microsoft.CognitiveServices/accounts/deployments@2
   name: embeddingDeploymentName
   dependsOn: [chatDeployment] // deployments on one account must be created one at a time
   sku: {
-    name: 'Standard'
+    name: 'GlobalStandard' // regional 'Standard' is not offered for this model in uksouth
     capacity: embeddingCapacity
   }
   properties: {
