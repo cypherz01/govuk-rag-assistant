@@ -17,6 +17,10 @@ dependencies = [
     "uvicorn[standard]>=0.54.0",
 ]
 
+[project.scripts]
+govuk-rag-fetch = "govuk_rag.govuk.fetch:main"
+govuk-rag-ingest = "govuk_rag.ingestion.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

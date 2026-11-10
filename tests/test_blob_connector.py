@@ -46,7 +46,9 @@ def test_reads_json_blobs_as_documents_in_name_order() -> None:
 
 
 def test_ignores_blobs_that_are_not_json() -> None:
-    container = FakeContainer({"README.txt": "notes", "a.json": blob("A", "https://www.gov.uk/a", "a")})
+    container = FakeContainer(
+        {"README.txt": "notes", "a.json": blob("A", "https://www.gov.uk/a", "a")}
+    )
 
     assert [d.id for d in BlobSourceConnector(container).list_documents()] == ["a"]
 

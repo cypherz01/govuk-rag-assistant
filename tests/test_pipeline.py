@@ -38,7 +38,11 @@ def test_first_run_indexes_every_document() -> None:
 def test_embeds_chunk_text_prefixed_with_title() -> None:
     embedder, index = FakeEmbedder(), FakeChunkIndex()
 
-    run(FakeSource([document("sick-pay", "Statutory Sick Pay is paid by employers.")]), embedder, index)
+    run(
+        FakeSource([document("sick-pay", "Statutory Sick Pay is paid by employers.")]),
+        embedder,
+        index,
+    )
 
     assert embedder.texts_embedded == ["Title sick-pay\n\nStatutory Sick Pay is paid by employers."]
     [stored] = index.chunks.values()

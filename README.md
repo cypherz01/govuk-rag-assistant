@@ -4,7 +4,7 @@ An Azure-native assistant that answers staff questions about UK employee-rights 
 sick pay, flexible working). Every answer cites its GOV.UK sources, and it says "I don't know" when
 the documents don't cover a question.
 
-> Work in progress: currently at **Milestone 1 (Foundation)**.
+> Work in progress: currently at **Milestone 2 (Ingestion)**.
 
 ## Local development
 
@@ -28,3 +28,44 @@ uv run pytest                # tests
 
 Settings come from environment variables prefixed `RAG_` (or a local `.env` file). See
 [`.env.example`](.env.example).
+
+## Ingestion
+
+Guidance flows GOV.UK → Blob Storage → chunk + embed → Azure AI Search.
+
+1. **Fetch** the pages listed in [`data/govuk_pages.txt`](data/govuk_pages.txt) from the GOV.UK
+   Content API. Multi-part guides become one document per part, so citations link to the exact
+   section.
+
+   ```sh
+   uv run govuk-rag-fetch            # writes JSON documents to data/govuk/
+   ```
+
+2. **Upload** them to the Blob container (signed in with `az login`, no keys):
+
+   ```sh
+   az storage blob upload-batch --auth-mode login --overwrite \
+     --account-name <storage-account> --destination govuk-guidance --source data/govuk
+   ```
+
+3. **Index** them. This creates the search index if needed, then syncs it with the container:
+
+   ```sh
+   uv run govuk-rag-ingest
+   ```
+
+   Re-running is safe. Unchanged documents are skipped and not re-embedded. Changed documents
+   have their chunks replaced, and documents deleted from the container are removed from the
+   index. Chunk ids are deterministic, so re-running never creates duplicates.
+
+Ingestion signs in with `DefaultAzureCredential`. Your identity, or the app's managed identity,
+needs these roles:
+
+- **Storage Blob Data Reader** on the storage account.
+- **Search Index Data Contributor** and **Search Service Contributor** on the search service.
+- **Cognitive Services OpenAI User** on the OpenAI resource.
+
+Other data sources plug in by implementing `SourceConnector` (`src/govuk_rag/ingestion/connectors.py`).
+
+GOV.UK content is © Crown copyright, used under the
+[Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).

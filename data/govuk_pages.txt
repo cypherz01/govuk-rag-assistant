@@ -1,0 +1,47 @@
+# GOV.UK pages ingested by the assistant (one path per line; # starts a comment).
+# Content is Crown copyright, used under the Open Government Licence v3.0:
+# https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/
+# Fetch with: uv run govuk-rag-fetch
+
+# Holiday and leave
+holiday-entitlement-rights
+employee-rights-when-on-leave
+time-off-for-dependants
+carers-leave
+
+# Sick pay
+statutory-sick-pay
+taking-sick-leave
+employers-sick-pay
+
+# Family leave and pay
+maternity-pay-leave
+employers-maternity-pay-leave
+paternity-pay-leave
+shared-parental-leave-and-pay
+adoption-pay-leave
+parental-leave
+parental-bereavement-pay-leave
+
+# Flexible working and working time
+flexible-working
+part-time-worker-rights
+rest-breaks-work
+maximum-weekly-working-hours
+night-working-hours
+
+# Contracts, pay and status
+employment-status
+employment-contracts-and-conditions
+your-employment-contract-how-it-can-be-changed
+fixed-term-contracts
+agency-workers-your-rights
+understanding-your-pay
+national-minimum-wage-rates
+
+# Problems at work
+raise-grievance-at-work
+discrimination-your-rights
+whistleblowing
+dismissal
+redundancy-your-rights

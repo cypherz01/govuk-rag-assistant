@@ -1,10 +1,8 @@
 from collections.abc import Iterator
 from typing import Any
 
-from azure.search.documents.indexes.models import SearchFieldDataType
-
 from govuk_rag.ingestion.models import Chunk, EmbeddedChunk
-from govuk_rag.search.index import AzureSearchChunkIndex, build_index_definition
+from govuk_rag.search.index import EDM_VECTOR, AzureSearchChunkIndex, build_index_definition
 
 
 def test_index_definition_supports_hybrid_search() -> None:
@@ -18,10 +16,12 @@ def test_index_definition_supports_hybrid_search() -> None:
     assert fields["title"].searchable
     assert fields["chunk_index"].filterable
     vector = fields["content_vector"]
-    assert vector.type == SearchFieldDataType.Collection(SearchFieldDataType.Single)
+    assert vector.type == EDM_VECTOR
     assert vector.vector_search_dimensions == 1536
     assert index.vector_search is not None
-    assert [p.name for p in index.vector_search.profiles or []] == [vector.vector_search_profile_name]
+    assert [p.name for p in index.vector_search.profiles or []] == [
+        vector.vector_search_profile_name
+    ]
 
 
 class FakeSearchClient:
