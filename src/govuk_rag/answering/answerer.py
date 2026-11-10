@@ -41,7 +41,8 @@ class Answerer:
             return _i_dont_know()
 
         reply = self._chat_model.complete(build_messages(question, relevant)).strip()
-        if reply.startswith(NO_ANSWER):
+        # The model is told to reply with only the sentinel, but sometimes explains first.
+        if NO_ANSWER in reply:
             return _i_dont_know()
 
         answer, used = _renumber_citations(reply, len(relevant))

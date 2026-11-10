@@ -95,7 +95,16 @@ def test_cites_every_source_given_when_the_model_cites_none() -> None:
     assert [c.title for c in response.citations] == ["Holiday entitlement", "Statutory Sick Pay"]
 
 
-@pytest.mark.parametrize("reply", [NO_ANSWER, f"  {NO_ANSWER}\n", f"{NO_ANSWER}."])
+@pytest.mark.parametrize(
+    "reply",
+    [
+        NO_ANSWER,
+        f"  {NO_ANSWER}\n",
+        f"{NO_ANSWER}.",
+        # Seen live: the model explains first, then gives the sentinel.
+        f"The sources do not say how to ask for a pay rise.\n\n{NO_ANSWER}",
+    ],
+)
 def test_says_i_dont_know_when_the_model_finds_no_answer_in_the_sources(reply: str) -> None:
     answerer, _, _ = _answerer(reply=reply)
 

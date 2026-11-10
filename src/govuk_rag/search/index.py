@@ -44,6 +44,7 @@ class SearchDocumentsClient(Protocol):
         *,
         filter: str,  # noqa: A002 - matches the SDK's keyword name
         select: list[str],
+        order_by: list[str] | None = None,
     ) -> Iterator[Mapping[str, Any]]: ...
 
     def merge_or_upload_documents(self, documents: list[dict[str, Any]]) -> object: ...
@@ -57,17 +58,9 @@ class SearchIndexAdminClient(Protocol):
     def create_or_update_index(self, index: SearchIndex) -> object: ...
 
 
-def _field(
-    name: str,
-    edm_type: str,
-    *,
-    key: bool = False,
-    searchable: bool = False,
-    filterable: bool = False,
-) -> SearchField:
-    return SearchField(
-        name=name, type=edm_type, key=key, searchable=searchable, filterable=filterable
-    )
+def _field(name: str, edm_type: str, **attributes: bool) -> SearchField:
+    """A field with the given attributes (key, searchable, filterable, sortable) switched on."""
+    return SearchField(name=name, type=edm_type, **attributes)
 
 
 def build_index_definition(name: str, *, embedding_dimensions: int) -> SearchIndex:
@@ -76,7 +69,7 @@ def build_index_definition(name: str, *, embedding_dimensions: int) -> SearchInd
         name=name,
         fields=[
             _field("id", _EDM_STRING, key=True),
-            _field("document_id", _EDM_STRING, filterable=True),
+            _field("document_id", _EDM_STRING, filterable=True, sortable=True),
             _field("title", _EDM_STRING, searchable=True),
             _field("url", _EDM_STRING),
             _field("content", _EDM_STRING, searchable=True),
@@ -86,6 +79,8 @@ def build_index_definition(name: str, *, embedding_dimensions: int) -> SearchInd
                 name="content_vector",
                 type=EDM_VECTOR,
                 searchable=True,
+                retrievable=True,  # retrieval reads it back to score cosine relevance
+                stored=True,
                 vector_search_dimensions=embedding_dimensions,
                 vector_search_profile_name=_VECTOR_PROFILE,
             ),
@@ -122,8 +117,13 @@ class AzureSearchChunkIndex:
 
     def document_hashes(self) -> dict[str, str]:
         # Every chunk carries its document's hash, so reading chunk 0 gives one row per document.
+        # "*" scores every row the same, so sort to keep the pages stable: unsorted, Azure's pages
+        # can repeat some rows and skip others.
         results = self._search_client.search(
-            "*", filter="chunk_index eq 0", select=["document_id", "content_hash"]
+            "*",
+            filter="chunk_index eq 0",
+            select=["document_id", "content_hash"],
+            order_by=["document_id"],
         )
         return {str(row["document_id"]): str(row["content_hash"]) for row in results}
 

@@ -1,0 +1,8 @@
+# Only pyproject.toml, uv.lock, README.md, LICENSE and src/ are needed in the image.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!src/
+**/__pycache__
