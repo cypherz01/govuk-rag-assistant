@@ -40,6 +40,19 @@ def test_uploads_every_json_document_under_its_file_name(tmp_path: Path) -> None
     }
 
 
+def test_uploads_guide_parts_in_subdirectories_under_their_relative_path(tmp_path: Path) -> None:
+    # govuk-rag-fetch saves each part of a multi-page guide as <guide>/<part>.json.
+    (tmp_path / "adoption-pay-leave").mkdir()
+    single = _write_document(tmp_path, "carers-leave.json", title="Carer's leave")
+    part = _write_document(tmp_path / "adoption-pay-leave", "pay.json", title="Adoption pay")
+    container = FakeWritableContainer()
+
+    uploaded = upload_directory(tmp_path, container)
+
+    assert uploaded == 2
+    assert container.blobs == {"carers-leave.json": single, "adoption-pay-leave/pay.json": part}
+
+
 def test_ignores_files_that_are_not_json(tmp_path: Path) -> None:
     _write_document(tmp_path, "holiday-entitlement-rights.json")
     (tmp_path / "README.txt").write_text("notes", encoding="utf-8")
