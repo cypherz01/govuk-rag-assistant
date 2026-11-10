@@ -43,6 +43,11 @@ venv = ".venv"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["-ra", "--strict-markers", "--strict-config"]
+filterwarnings = [
+    "error",
+    # FastAPI's TestClient still imports httpx; harmless until FastAPI moves off it.
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
 
 [dependency-groups]
 dev = [
